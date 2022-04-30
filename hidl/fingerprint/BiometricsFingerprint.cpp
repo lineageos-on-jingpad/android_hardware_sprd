@@ -25,6 +25,18 @@
 #include <inttypes.h>
 #include <unistd.h>
 
+namespace {
+
+typedef struct fingerprint_hal {
+    const char* class_name;
+} fingerprint_hal_t;
+
+static const fingerprint_hal_t kModules[] = {
+        {"goodix"}, {"silead"},
+};
+
+}  // anonymous namespace
+
 namespace android {
 namespace hardware {
 namespace biometrics {
@@ -41,9 +53,18 @@ BiometricsFingerprint* BiometricsFingerprint::sInstance = nullptr;
 
 BiometricsFingerprint::BiometricsFingerprint() : mClientCallback(nullptr), mDevice(nullptr) {
     sInstance = this;  // keep track of the most recent instance
-    mDevice = openHal();
+    for (auto& [class_name] : kModules) {
+        mDevice = openHal(class_name);
+        if (!mDevice) {
+            ALOGE("Can't open HAL module, class %s", class_name);
+            continue;
+        }
+
+        ALOGI("Opened fingerprint HAL, class %s", class_name);
+        break;
+    }
     if (!mDevice) {
-        ALOGE("Can't open HAL module");
+        ALOGE("Can't open any HAL module");
     }
 }
 
@@ -253,11 +274,11 @@ IBiometricsFingerprint* BiometricsFingerprint::getInstance() {
     return sInstance;
 }
 
-fingerprint_device_t* BiometricsFingerprint::openHal() {
+fingerprint_device_t* BiometricsFingerprint::openHal(const char* class_name) {
     int err;
     const hw_module_t* hw_mdl = nullptr;
     ALOGD("Opening fingerprint hal library...");
-    if (0 != (err = hw_get_module(FINGERPRINT_HARDWARE_MODULE_ID, &hw_mdl))) {
+    if (0 != (err = hw_get_module_by_class(FINGERPRINT_HARDWARE_MODULE_ID, class_name, &hw_mdl))) {
         ALOGE("Can't open fingerprint HW Module, error: %d", err);
         return nullptr;
     }
