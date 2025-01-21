@@ -32,8 +32,8 @@
 /**
  * Trims off the leading zero bytes and copy it to a buffer aligning it to the end.
  */
-static inline int trim_to_p256_bytes(unsigned char dst[P256_NBYTES], unsigned char *src,
-        int src_len) {
+static inline int trim_to_p256_bytes(unsigned char dst[P256_NBYTES], unsigned char* src,
+                                     int src_len) {
     int dst_offset;
     while (*src == '\0' && src_len > 0) {
         src++;
@@ -114,8 +114,8 @@ int dsa_sig_unpack(unsigned char* sig, int sig_len, p256_int* r_int, p256_int* s
      * ASN.1 encoded integers are zero-padded for positive integers. Make sure we have
      * a correctly-sized buffer and that the resulting integer isn't too large.
      */
-    if (!trim_to_p256_bytes(r_bytes, &sig[4], r_len)
-            || !trim_to_p256_bytes(s_bytes, &sig[6 + r_len], s_len)) {
+    if (!trim_to_p256_bytes(r_bytes, &sig[4], r_len) ||
+        !trim_to_p256_bytes(s_bytes, &sig[6 + r_len], s_len)) {
         return 0;
     }
 

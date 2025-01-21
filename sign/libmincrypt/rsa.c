@@ -30,8 +30,7 @@
 #include "mincrypt/sha256.h"
 
 // a[] -= mod
-static void subM(const RSAPublicKey* key,
-                 uint32_t* a) {
+static void subM(const RSAPublicKey* key, uint32_t* a) {
     int64_t A = 0;
     int i;
     for (i = 0; i < key->len; ++i) {
@@ -42,8 +41,7 @@ static void subM(const RSAPublicKey* key,
 }
 
 // return a[] >= mod
-static int geM(const RSAPublicKey* key,
-               const uint32_t* a) {
+static int geM(const RSAPublicKey* key, const uint32_t* a) {
     int i;
     for (i = key->len; i;) {
         --i;
@@ -54,10 +52,7 @@ static int geM(const RSAPublicKey* key,
 }
 
 // montgomery c[] += a * b[] / R % mod
-static void montMulAdd(const RSAPublicKey* key,
-                       uint32_t* c,
-                       const uint32_t a,
-                       const uint32_t* b) {
+static void montMulAdd(const RSAPublicKey* key, uint32_t* c, const uint32_t a, const uint32_t* b) {
     uint64_t A = (uint64_t)a * b[0] + c[0];
     uint32_t d0 = (uint32_t)A * key->n0inv;
     uint64_t B = (uint64_t)d0 * key->n[0] + (uint32_t)A;
@@ -79,10 +74,7 @@ static void montMulAdd(const RSAPublicKey* key,
 }
 
 // montgomery c[] = a[] * b[] / R % mod
-static void montMul(const RSAPublicKey* key,
-                    uint32_t* c,
-                    const uint32_t* a,
-                    const uint32_t* b) {
+static void montMul(const RSAPublicKey* key, uint32_t* c, const uint32_t* a, const uint32_t* b) {
     int i;
     for (i = 0; i < key->len; ++i) {
         c[i] = 0;
@@ -94,8 +86,7 @@ static void montMul(const RSAPublicKey* key,
 
 // In-place public exponentiation.
 // Input and output big-endian byte array in inout.
-static void modpow(const RSAPublicKey* key,
-                   uint8_t* inout) {
+static void modpow(const RSAPublicKey* key, uint8_t* inout) {
     uint32_t a[RSANUMWORDS];
     uint32_t aR[RSANUMWORDS];
     uint32_t aaR[RSANUMWORDS];
@@ -104,27 +95,26 @@ static void modpow(const RSAPublicKey* key,
 
     // Convert from big endian byte array to little endian word array.
     for (i = 0; i < key->len; ++i) {
-        uint32_t tmp =
-            (inout[((key->len - 1 - i) * 4) + 0] << 24) |
-            (inout[((key->len - 1 - i) * 4) + 1] << 16) |
-            (inout[((key->len - 1 - i) * 4) + 2] << 8) |
-            (inout[((key->len - 1 - i) * 4) + 3] << 0);
+        uint32_t tmp = (inout[((key->len - 1 - i) * 4) + 0] << 24) |
+                       (inout[((key->len - 1 - i) * 4) + 1] << 16) |
+                       (inout[((key->len - 1 - i) * 4) + 2] << 8) |
+                       (inout[((key->len - 1 - i) * 4) + 3] << 0);
         a[i] = tmp;
     }
 
     if (key->exponent == 65537) {
-        aaa = aaR;  // Re-use location.
+        aaa = aaR;                     // Re-use location.
         montMul(key, aR, a, key->rr);  // aR = a * RR / R mod M
         for (i = 0; i < 16; i += 2) {
-            montMul(key, aaR, aR, aR);  // aaR = aR * aR / R mod M
+            montMul(key, aaR, aR, aR);   // aaR = aR * aR / R mod M
             montMul(key, aR, aaR, aaR);  // aR = aaR * aaR / R mod M
         }
         montMul(key, aaa, aR, a);  // aaa = aR * a / R mod M
     } else if (key->exponent == 3) {
-        aaa = aR;  // Re-use location.
-        montMul(key, aR, a, key->rr);  /* aR = a * RR / R mod M   */
-        montMul(key, aaR, aR, aR);     /* aaR = aR * aR / R mod M */
-        montMul(key, aaa, aaR, a);     /* aaa = aaR * a / R mod M */
+        aaa = aR;                     // Re-use location.
+        montMul(key, aR, a, key->rr); /* aR = a * RR / R mod M   */
+        montMul(key, aaR, aR, aR);    /* aaR = aR * aR / R mod M */
+        montMul(key, aaa, aaR, a);    /* aaa = aaR * a / R mod M */
     }
 
     // Make sure aaa < mod; aaa is at most 1x mod too large.
@@ -188,10 +178,8 @@ static const uint8_t sha_padding[RSANUMBYTES] = {
 // SHA-1 of PKCS1.5 signature sha_padding for 2048 bit, as above.
 // At the location of the bytes of the hash all 00 are hashed.
 static const uint8_t kExpectedPadShaRsa2048[SHA_DIGEST_SIZE] = {
-    0xdc, 0xbd, 0xbe, 0x42, 0xd5, 0xf5, 0xa7, 0x2e,
-    0x6e, 0xfc, 0xf5, 0x5d, 0xaf, 0x9d, 0xea, 0x68,
-    0x7c, 0xfb, 0xf1, 0x67
-};
+        0xdc, 0xbd, 0xbe, 0x42, 0xd5, 0xf5, 0xa7, 0x2e, 0x6e, 0xfc,
+        0xf5, 0x5d, 0xaf, 0x9d, 0xea, 0x68, 0x7c, 0xfb, 0xf1, 0x67};
 
 /*
 static const uint8_t sha256_padding[RSANUMBYTES] = {
@@ -233,10 +221,9 @@ static const uint8_t sha256_padding[RSANUMBYTES] = {
 // SHA-256 of PKCS1.5 signature sha256_padding for 2048 bit, as above.
 // At the location of the bytes of the hash all 00 are hashed.
 static const uint8_t kExpectedPadSha256Rsa2048[SHA256_DIGEST_SIZE] = {
-    0xab, 0x28, 0x8d, 0x8a, 0xd7, 0xd9, 0x59, 0x92,
-    0xba, 0xcc, 0xf8, 0x67, 0x20, 0xe1, 0x15, 0x2e,
-    0x39, 0x8d, 0x80, 0x36, 0xd6, 0x6f, 0xf0, 0xfd,
-    0x90, 0xe8, 0x7d, 0x8b, 0xe1, 0x7c, 0x87, 0x59,
+        0xab, 0x28, 0x8d, 0x8a, 0xd7, 0xd9, 0x59, 0x92, 0xba, 0xcc, 0xf8,
+        0x67, 0x20, 0xe1, 0x15, 0x2e, 0x39, 0x8d, 0x80, 0x36, 0xd6, 0x6f,
+        0xf0, 0xfd, 0x90, 0xe8, 0x7d, 0x8b, 0xe1, 0x7c, 0x87, 0x59,
 };
 
 // Verify a 2048-bit RSA PKCS1.5 signature against an expected hash.
@@ -246,11 +233,8 @@ static const uint8_t kExpectedPadSha256Rsa2048[SHA256_DIGEST_SIZE] = {
 // values are supported.
 //
 // Returns 1 on successful verification, 0 on failure.
-int RSA_verify(const RSAPublicKey *key,
-               const uint8_t *signature,
-               const int len,
-               const uint8_t *hash,
-               const int hash_len) {
+int RSA_verify(const RSAPublicKey* key, const uint8_t* signature, const int len,
+               const uint8_t* hash, const int hash_len) {
     uint8_t buf[RSANUMBYTES];
     int i;
     const uint8_t* padding_hash;
@@ -263,8 +247,7 @@ int RSA_verify(const RSAPublicKey *key,
         return 0;  // Wrong input length.
     }
 
-    if (hash_len != SHA_DIGEST_SIZE &&
-        hash_len != SHA256_DIGEST_SIZE) {
+    if (hash_len != SHA_DIGEST_SIZE && hash_len != SHA256_DIGEST_SIZE) {
         return 0;  // Unsupported hash.
     }
 
