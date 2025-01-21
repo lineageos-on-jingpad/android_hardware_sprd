@@ -1,0 +1,7 @@
+cc_binary_host {
+    name: "imgheaderinsert",
+    srcs: ["imgheaderinsert.c"],
+    static_libs: ["libmincrypt"],
+    local_include_dirs: ["."],
+    include_dirs: ["hardware/sprd/sign/include"],
+}
