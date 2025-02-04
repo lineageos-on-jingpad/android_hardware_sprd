@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CamDev@3.5-impl"
+#define LOG_TAG "CamDev@3.5-impl-sprd"
 #include <log/log.h>
 
 #include "CameraModule.h"

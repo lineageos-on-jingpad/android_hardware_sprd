@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CamPrvdr@2.4-legacy"
+#define LOG_TAG "CamPrvdr@2.4-legacy-sprd"
 //#define LOG_NDEBUG 0
 #include <android/log.h>
-#include <android-base/parseint.h>
-#include <android-base/properties.h>
-#include <android-base/strings.h>
 
 #include "LegacyCameraProviderImpl_2_4.h"
 #include "CameraDevice_1_0.h"
+#include "CameraDevice_3_2.h"
 #include "CameraDevice_3_3.h"
 #include "CameraDevice_3_4.h"
 #include "CameraDevice_3_5.h"
 #include "CameraProvider_2_4.h"
 #include <cutils/properties.h>
-#include <numeric>
 #include <regex>
 #include <string.h>
 #include <utils/Trace.h>
-
-#define CAMERA_REMAP_IDS_PROPERTY "vendor.camera.remapid"
 
 namespace android {
 namespace hardware {
@@ -50,7 +45,7 @@ const std::regex kDeviceNameRE("device@([0-9]+\\.[0-9]+)/legacy/(.+)");
 const char *kHAL3_4 = "3.4";
 const char *kHAL3_5 = "3.5";
 const int kMaxCameraDeviceNameLen = 128;
-const int kMaxCameraIdLen = 16;
+const int kMaxCameraIdLen = 30;
 
 bool matchDeviceName(const hidl_string& deviceName, std::string* deviceVersion,
                      std::string* cameraId) {
@@ -271,34 +266,6 @@ LegacyCameraProviderImpl_2_4::LegacyCameraProviderImpl_2_4() :
 
 LegacyCameraProviderImpl_2_4::~LegacyCameraProviderImpl_2_4() {}
 
-static std::vector<int> getLegacyCameraIdMap(int numberOfCameras) {
-    // Initialize identity mapping
-    std::vector<int> cameraIdMap(numberOfCameras);
-    std::iota(std::begin(cameraIdMap), std::end(cameraIdMap), 0);
-
-    // Return if property for remap is not defined or is empty
-    std::string remapProp = base::GetProperty(CAMERA_REMAP_IDS_PROPERTY, "");
-    if (remapProp.empty()) {
-        ALOGD("%s: camera IDs remapping property '%s' is empty", __func__,
-              CAMERA_REMAP_IDS_PROPERTY);
-        return cameraIdMap;
-    }
-
-    // Split camera IDs that are separated by space
-    std::vector<std::string> idRemap = base::Split(remapProp, " ");
-
-    for (int n = 0; n < numberOfCameras; n++) {
-        int mappedId;
-
-        // Replace n-th camera ID in the map if it is defined
-        if (n < idRemap.size() && base::ParseInt(idRemap[n], &mappedId)) {
-            cameraIdMap[n] = mappedId;
-        }
-    }
-
-    return cameraIdMap;
-}
-
 bool LegacyCameraProviderImpl_2_4::initialize() {
     camera_module_t *rawModule;
     int err = hw_get_module(CAMERA_HARDWARE_MODULE_ID,
@@ -347,22 +314,23 @@ bool LegacyCameraProviderImpl_2_4::initialize() {
     }
 
     mNumberOfLegacyCameras = mModule->getNumberOfCameras();
-
-    // Get camera IDs map
-    auto cameraIdMap = getLegacyCameraIdMap(mNumberOfLegacyCameras);
-
-    for (int n = 0; n < mNumberOfLegacyCameras; n++) {
-        int i = cameraIdMap[n];
-        mLegacyCameras.insert(i);
-
-        if (n != i) {
-            ALOGI("%s: Camera %d ID remapped to %d", __func__, n, i);
-        }
-
+	    ALOGI("number of cameras: %d ",mNumberOfLegacyCameras);
+    for (int i = 0; i < mNumberOfLegacyCameras; i++) {
+	#define SEARCH_SINGLE_CAMERAS 2
         struct camera_info info;
         auto rc = mModule->getCameraInfo(i, &info);
         if (rc != NO_ERROR) {
-            ALOGE("%s: Camera info query failed!", __func__);
+            ALOGI("%s: Unsupport camera %d", __func__,i);
+            if (mModule->getNumberOfCameras() == 1) {
+                mNumberOfLegacyCameras ++;
+                //search camera 1 for single camera
+                if (mNumberOfLegacyCameras > SEARCH_SINGLE_CAMERAS) {
+                    ALOGE("%s: Can't get available camera!", __func__);
+                    mModule.clear();
+                    return true;
+                }
+                continue;
+            }
             mModule.clear();
             return true;
         }
@@ -502,7 +470,7 @@ Return<Status> LegacyCameraProviderImpl_2_4::setCallback(
     for (auto const& statusPair : mCameraStatusMap) {
         int id = std::stoi(statusPair.first);
         auto status = static_cast<CameraDeviceStatus>(statusPair.second);
-        if (!mLegacyCameras.contains(id) && status != CameraDeviceStatus::NOT_PRESENT) {
+        if (id >= mNumberOfLegacyCameras && status != CameraDeviceStatus::NOT_PRESENT) {
             addDeviceNames(id, status, true);
         }
     }
@@ -520,7 +488,7 @@ Return<void> LegacyCameraProviderImpl_2_4::getCameraIdList(
         ICameraProvider::getCameraIdList_cb _hidl_cb) {
     std::vector<hidl_string> deviceNameList;
     for (auto const& deviceNamePair : mCameraDeviceNames) {
-        if (!mLegacyCameras.contains(std::stoi(deviceNamePair.first))) {
+        if (std::stoi(deviceNamePair.first) >= mNumberOfLegacyCameras) {
             // External camera devices must be reported through the device status change callback,
             // not in this list.
             continue;
@@ -604,7 +572,9 @@ Return<void> LegacyCameraProviderImpl_2_4::getCameraDeviceInterface_V3_x(
         _hidl_cb(Status::ILLEGAL_ARGUMENT, nullptr);
         return Void();
     }
-
+// Add for sprd multiCamera
+    bool isSprdMultiCamera = device::V3_2::implementation::CameraDevice::isSprdMultiCamera(atoi(cameraId.c_str()));
+    if (!isSprdMultiCamera) {
     std::string deviceName(cameraDeviceName.c_str());
     ssize_t index = mCameraDeviceNames.indexOf(std::make_pair(cameraId, deviceName));
     if (index == NAME_NOT_FOUND) { // Either an illegal name or a device version mismatch
@@ -621,12 +591,13 @@ Return<void> LegacyCameraProviderImpl_2_4::getCameraDeviceInterface_V3_x(
         _hidl_cb(status, nullptr);
         return Void();
     }
-
-    if (mCameraStatusMap.count(cameraId) == 0 ||
+        if (mCameraStatusMap.count(cameraId) == 0 ||
             mCameraStatusMap[cameraId] != CAMERA_DEVICE_STATUS_PRESENT) {
         _hidl_cb(Status::ILLEGAL_ARGUMENT, nullptr);
         return Void();
     }
+}
+
 
     sp<android::hardware::camera::device::V3_2::implementation::CameraDevice> deviceImpl;
 

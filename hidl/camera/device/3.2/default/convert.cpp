@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "android.hardware.camera.device@3.2-convert-impl"
+#define LOG_TAG "android.hardware.camera.device@3.2-convert-impl-sprd"
 #include <log/log.h>
 #include <system/camera_metadata.h>
 
@@ -74,10 +74,6 @@ void convertFromHidl(const Stream &src, Camera3Stream* dst) {
     dst->data_space = (android_dataspace_t) src.dataSpace;
     dst->rotation = (int) src.rotation;
     dst->usage = (uint32_t) src.usage;
-#ifdef TARGET_CAMERA_OVERRIDE_FORMAT_FROM_RESERVED
-    dst->reserved[0] = NULL;
-    dst->reserved[1] = NULL;
-#endif
     // Fields to be filled by HAL (max_buffers, priv) are initialized to 0
     dst->max_buffers = 0;
     dst->priv = 0;
@@ -100,25 +96,6 @@ void convertToHidl(const Camera3Stream* src, HalStream* dst) {
         ALOGW("%s: Stream type %d is not currently supported!",
                 __FUNCTION__, src->stream_type);
     }
-
-#ifdef TARGET_CAMERA_OVERRIDE_FORMAT_FROM_RESERVED
-    HalStream* halStream = NULL;
-    if (src->reserved[0] != NULL) {
-        halStream = (HalStream*)(src->reserved[0]);
-    } else if (src->reserved[1] != NULL) {
-        halStream = (HalStream*)(src->reserved[1]);
-    }
-
-    // Check if overrideFormat is set and honor it
-    if (halStream != NULL) {
-        dst->overrideFormat = (PixelFormat) halStream->overrideFormat;
-        if (src->stream_type == CAMERA3_STREAM_OUTPUT) {
-            dst->producerUsage = (BufferUsageFlags)halStream->producerUsage;
-        } else if (src->stream_type == CAMERA3_STREAM_INPUT) {
-            dst->consumerUsage = (BufferUsageFlags)halStream->consumerUsage;
-        }
-    }
-#endif
 }
 
 void convertToHidl(const camera3_stream_configuration_t& src, HalStreamConfiguration* dst) {

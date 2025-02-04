@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "ExtCamDev@3.6"
+#define LOG_TAG "ExtCamDev@3.6-sprd"
 //#define LOG_NDEBUG 0
 #include <log/log.h>
 

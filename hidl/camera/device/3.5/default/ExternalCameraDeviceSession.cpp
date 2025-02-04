@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "ExtCamDevSsn@3.5"
+#define LOG_TAG "ExtCamDevSsn@3.5-sprd"
 #include <android/log.h>
 
 #include <utils/Trace.h>

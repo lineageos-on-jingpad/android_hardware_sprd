@@ -14,30 +14,20 @@
 // limitations under the License.
 //
 
-package {
-    default_team: "trendy_team_camera_framework",
-    // See: http://go/android-license-faq
-    // A large-scale-change added 'default_applicable_licenses' to import
-    // all of the 'license_kinds' from "hardware_interfaces_license"
-    // to get the below license kinds:
-    //   SPDX-license-identifier-Apache-2.0
-    default_applicable_licenses: ["hardware_interfaces_license"],
-}
-
 cc_library_headers {
-    name: "camera.device@3.5-impl_headers",
+    name: "camera.device@3.5-impl-sprd_headers",
     vendor: true,
     export_include_dirs: ["include/device_v3_5_impl"],
 }
 
 cc_library_headers {
-    name: "camera.device@3.5-external-impl_headers",
+    name: "camera.device@3.5-external-impl-sprd_headers",
     vendor: true,
     export_include_dirs: ["include/ext_device_v3_5_impl"],
 }
 
 cc_library_shared {
-    name: "camera.device@3.5-impl",
+    name: "camera.device@3.5-impl-sprd",
     defaults: ["hidl_defaults"],
     proprietary: true,
     vendor: true,
@@ -50,9 +40,9 @@ cc_library_shared {
         "libui",
         "libutils",
         "libcutils",
-        "camera.device@3.2-impl",
-        "camera.device@3.3-impl",
-        "camera.device@3.4-impl",
+        "camera.device@3.2-impl-sprd",
+        "camera.device@3.3-impl-sprd",
+        "camera.device@3.4-impl-sprd",
         "android.hardware.camera.device@3.2",
         "android.hardware.camera.device@3.3",
         "android.hardware.camera.device@3.4",
@@ -73,7 +63,7 @@ cc_library_shared {
 }
 
 cc_library_shared {
-    name: "camera.device@3.5-external-impl",
+    name: "camera.device@3.5-external-impl-sprd",
     defaults: ["hidl_defaults"],
     proprietary: true,
     vendor: true,
@@ -86,9 +76,9 @@ cc_library_shared {
         "libui",
         "libutils",
         "libcutils",
-        "camera.device@3.2-impl",
-        "camera.device@3.3-impl",
-        "camera.device@3.4-external-impl",
+        "camera.device@3.2-impl-sprd",
+        "camera.device@3.3-impl-sprd",
+        "camera.device@3.4-external-impl-sprd",
         "android.hardware.camera.device@3.2",
         "android.hardware.camera.device@3.3",
         "android.hardware.camera.device@3.4",

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CamDev@3.2-impl"
+#define LOG_TAG "CamDev@3.2-impl-sprd"
 #include <log/log.h>
 
 #include <utils/Vector.h>
@@ -68,6 +68,60 @@ Status CameraDevice::initStatus() const {
     return status;
 }
 
+// sprd: add for sprd multi camera
+bool CameraDevice::isSprdMultiCamera(int cameraId) {
+    if(cameraId > SPRD_MULTI_CAMERA_BASE_ID &&
+       cameraId < SPRD_MULTI_CAMERA_MAX_ID)
+        return true;
+    else
+        return false;
+}
+
+// sprd: Get main camera id for multi camera
+int CameraDevice::getMainCamIdForMultiCamId(int multiCameraId) {
+    int mainCameraId = 0;
+
+    switch(multiCameraId) {
+        case SPRD_3D_VIDEO_ID:
+        case SPRD_RANGE_FINDER_ID:
+        case SPRD_3D_CAPTURE_ID:
+        case SPRD_3D_CALIBRATION_ID:
+        case SPRD_3D_PREVIEW_ID:
+        case SPRD_SELF_SHOT_ID:
+        case SPRD_SINGLE_FACEID_REGISTER_ID:
+        case SPRD_SINGLE_FACEID_UNLOCK_ID:
+        case SPRD_DUAL_FACEID_REGISTER_ID:
+        case SPRD_DUAL_FACEID_UNLOCK_ID:
+        case SPRD_BLUR_FRONT_ID:
+        case SPRD_3D_FACE_ID:
+        case SPRD_FRONT_HIGH_RES:
+            mainCameraId = 1;
+            break;
+        case SPRD_REFOCUS_ID:
+        case SPRD_BLUR_ID:
+        case SPRD_BOKEH_ID:
+        case SPRD_PORTRAIT_ID:
+        case SPRD_PORTRAIT_SINGLE_ID:
+        case SPRD_SOFY_OPTICAL_ZOOM_ID:
+        case SPRD_FOV_FUSION_ID:
+        case SPRD_ULTRA_WIDE_ID:
+        case SPRD_MULTI_CAMERA_ID:
+        case SPRD_BACK_HIGH_RESOLUTION_ID:
+        case SPRD_OPTICSZOOM_W_ID:
+        case SPRD_OPTICSZOOM_T_ID:
+            mainCameraId = 0;
+            break;
+        case SPRD_PAGE_TURN_ID:
+            mainCameraId = 2;
+            break;
+        default:
+            ALOGE("unknown multiple camera id");
+            break;
+    }
+
+    return mainCameraId;
+}
+
 void CameraDevice::setConnectionStatus(bool connected) {
     Mutex::Autolock _l(mLock);
     mDisconnected = !connected;
@@ -111,7 +165,14 @@ Return<void> CameraDevice::getResourceCost(ICameraDevice::getResourceCost_cb _hi
 
         // If using post-2.4 module version, query the cost + conflicting devices from the HAL
         if (mModule->getModuleApiVersion() >= CAMERA_MODULE_API_VERSION_2_4) {
-            int ret = mModule->getCameraInfo(mCameraIdInt, &info);
+            // sprd: change for sprd multi-camera
+            // int ret = mModule->getCameraInfo(mCameraIdInt, &info);
+            int ret;
+            if(isSprdMultiCamera(mCameraIdInt))
+                ret = mModule->getCameraInfo(getMainCamIdForMultiCamId(mCameraIdInt), &info);
+            else
+                ret = mModule->getCameraInfo(mCameraIdInt, &info);
+
             if (ret == OK) {
                 cost = info.resource_cost;
                 for (size_t i = 0; i < info.conflicting_devices_length; i++) {

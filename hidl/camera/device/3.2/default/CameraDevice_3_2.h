@@ -49,6 +49,43 @@ using ::android::sp;
 using ::android::Mutex;
 
 /*
+ * sprd: add for sprd multi-camera
+ */
+typedef enum {
+    SPRD_MULTI_CAMERA_BASE_ID = 16,
+    SPRD_3D_FACE_ID,
+    SPRD_RANGE_FINDER_ID,
+    SPRD_3D_CAPTURE_ID,
+    SPRD_3D_CALIBRATION_ID = 20,
+    SPRD_REFOCUS_ID,
+    SPRD_3D_PREVIEW_ID,
+    SPRD_SOFY_OPTICAL_ZOOM_ID,
+    SPRD_BLUR_ID,
+    SPRD_SELF_SHOT_ID = 25,
+    SPRD_PAGE_TURN_ID,
+    SPRD_BLUR_FRONT_ID,
+    SPRD_BOKEH_ID,
+    SPRD_SBS_ID,
+    SPRD_SINGLE_FACEID_REGISTER_ID = 30,
+    SPRD_SINGLE_FACEID_UNLOCK_ID,
+    SPRD_DUAL_FACEID_REGISTER_ID,
+    SPRD_DUAL_FACEID_UNLOCK_ID,
+    SPRD_3D_VIDEO_ID,
+    SPRD_ULTRA_WIDE_ID,
+    SPRD_MULTI_CAMERA_ID = 36,
+    SPRD_BACK_HIGH_RESOLUTION_ID = 37,
+    SPRD_PORTRAIT_ID = 38,
+    SPRD_FRONT_HIGH_RES = 39, /* front 4in1 sensor, high resolution */
+    SPRD_OPTICSZOOM_W_ID = 40,
+    SPRD_OPTICSZOOM_T_ID = 41,
+    SPRD_PORTRAIT_SINGLE_ID = 42,
+    SPRD_3D_FACEID_REGISTER_ID = 46,
+    SPRD_3D_FACEID_UNLOCK_ID = 47,
+    SPRD_FOV_FUSION_ID = 48,
+    SPRD_MULTI_CAMERA_MAX_ID
+} multiCameraId;
+
+/*
  * The camera device HAL implementation is opened lazily (via the open call)
  */
 struct CameraDevice : public virtual RefBase {
@@ -87,6 +124,9 @@ struct CameraDevice : public virtual RefBase {
     Return<void> dumpState(const ::android::hardware::hidl_handle& fd);
     /* End of Methods from ::android::hardware::camera::device::V3_2::ICameraDevice */
 
+    // sprd: add for sprd multi-camera
+    static bool isSprdMultiCamera(int cameraId);
+
 protected:
 
     // Overridden by child implementations for returning different versions of CameraDeviceSession
@@ -115,6 +155,8 @@ protected:
     Status initStatus() const;
 
 private:
+     // sprd: add for sprd multi-camera
+    int getMainCamIdForMultiCamId(int multiCameraId);
     struct TrampolineDeviceInterface_3_2 : public ICameraDevice {
         TrampolineDeviceInterface_3_2(sp<CameraDevice> parent) :
             mParent(parent) {}

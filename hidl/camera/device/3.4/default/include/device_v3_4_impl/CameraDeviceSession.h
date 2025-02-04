@@ -80,7 +80,7 @@ protected:
             ICameraDeviceSession::configureStreams_3_4_cb _hidl_cb);
 
     bool preProcessConfigurationLocked_3_4(
-            const StreamConfiguration& requestedConfiguration, bool useOverriddenFields,
+            const StreamConfiguration& requestedConfiguration,
             camera3_stream_configuration_t *stream_list /*out*/,
             hidl_vec<camera3_stream_t*> *streams /*out*/);
     void postProcessConfigurationLocked_3_4(const StreamConfiguration& requestedConfiguration);
@@ -91,7 +91,7 @@ protected:
             const StreamConfiguration& requestedConfiguration,
             ICameraDeviceSession::configureStreams_3_4_cb _hidl_cb,
             // Optional argument for ICameraDeviceSession@3.5 impl
-            uint32_t streamConfigCounter = 0, bool useOverriddenFields = true);
+            uint32_t streamConfigCounter = 0);
 
     Return<void> processCaptureRequest_3_4(
             const hidl_vec<V3_4::CaptureRequest>& requests,

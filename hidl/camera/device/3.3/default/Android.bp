@@ -1,19 +1,5 @@
-package {
-    default_team: "trendy_team_camera_framework",
-    // See: http://go/android-license-faq
-    // A large-scale-change added 'default_applicable_licenses' to import
-    // all of the 'license_kinds' from "hardware_interfaces_license"
-    // to get the below license kinds:
-    //   SPDX-license-identifier-Apache-2.0
-    default_applicable_licenses: ["hardware_interfaces_license"],
-}
-
 cc_library_shared {
-    name: "camera.device@3.3-impl",
-    defaults: [
-        "hidl_defaults",
-        "camera_override_format_from_reserved_defaults",
-    ],
+    name: "camera.device@3.3-impl-sprd",
     proprietary: true,
     srcs: [
         "CameraDevice.cpp",
@@ -24,7 +10,7 @@ cc_library_shared {
         "libhidlbase",
         "libutils",
         "libcutils",
-        "camera.device@3.2-impl",
+        "camera.device@3.2-impl-sprd",
         "android.hardware.camera.device@3.2",
         "android.hardware.camera.device@3.3",
         "android.hardware.camera.provider@2.4",

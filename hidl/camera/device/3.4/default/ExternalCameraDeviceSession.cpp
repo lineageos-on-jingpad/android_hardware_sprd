@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "ExtCamDevSsn@3.4"
+#define LOG_TAG "ExtCamDevSsn@3.4-sprd"
 //#define LOG_NDEBUG 0
 #define ATRACE_TAG ATRACE_TAG_CAMERA
 #include <log/log.h>

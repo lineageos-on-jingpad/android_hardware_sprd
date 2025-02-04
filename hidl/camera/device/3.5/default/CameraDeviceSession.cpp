@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CamDevSession@3.5-impl"
+#define LOG_TAG "CamDevSession@3.5-impl-sprd"
 #define ATRACE_TAG ATRACE_TAG_CAMERA
 #include <android/log.h>
 
@@ -66,7 +66,7 @@ Return<void> CameraDeviceSession::configureStreams_3_5(
         const StreamConfiguration& requestedConfiguration,
         ICameraDeviceSession::configureStreams_3_5_cb _hidl_cb)  {
     configureStreams_3_4_Impl(requestedConfiguration.v3_4, _hidl_cb,
-            requestedConfiguration.streamConfigCounter, false /*useOverriddenFields*/);
+            requestedConfiguration.streamConfigCounter);
     return Void();
 }
 

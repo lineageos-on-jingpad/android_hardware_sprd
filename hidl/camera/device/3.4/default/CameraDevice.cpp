@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "CamDev@3.4-impl"
+#define LOG_TAG "CamDev@3.4-impl-sprd"
 #include <log/log.h>
 
 #include <utils/Vector.h>
